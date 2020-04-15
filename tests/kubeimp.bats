@@ -18,6 +18,8 @@ __command_short="$__command -f $__from -n $__namespace -r $__resource \
 __command_full="$__command --from $__from --namespace $__namespace \
     --resource $__resource --output $__output"
 
+__current_context="xpto0"
+
 #kubectl get $__resource -o $__output
 
 setup() {
@@ -72,32 +74,30 @@ teardown()
   [ "$status" -eq 0 ]
 }
 
-@test "kubeimp with -f" {
+@test "kubeimp with -f success" {
   local context="xpto1"
 
-  __with_param_f_or_full "$__command -f" $context
+  __success_with_param_f_or_full "$__command -f" $context
 }
 
-@test "kubeimp with --from" {
+@test "kubeimp with --from success" {
   local context="xpto1"
 
-  __with_param_f_or_full "$__command --from" $context
+  __success_with_param_f_or_full "$__command --from" $context
 }
 
-function __with_param_f_or_full() {
-  local current_context="xpto0"
-
+function __success_with_param_f_or_full() {
   local context="${2}"
 
   shellmock_expect kubectl --status 0 --match "config current-context" \
-    --output "$current_context"
+    --output "$__current_context"
+
+  shellmock_expect kubectl --status 0 --match "config use-context " \
+    "$__current_context"
 
   shellmock_expect kubectl --status 0 --match "config use-context $context"
 
   shellmock_expect kubectl --status 0 --match "$__args" --output "xpto2"
-
-  shellmock_expect kubectl --status 0 --match "config use-context " \
-    "$current_context"
 
   local command="${1} "$context
 
@@ -111,10 +111,40 @@ function __with_param_f_or_full() {
   [ "${capture[1]}" = "kubectl-stub config current-context" ]
   [ "${capture[2]}" = "kubectl-stub config use-context $context" ]
   [ "${capture[3]}" = "kubectl-stub $__args" ]
-  [ "${capture[4]}" = "kubectl-stub config use-context $current_context" ]
+  [ "${capture[4]}" = "kubectl-stub config use-context $__current_context" ]
 }
 
-@test "kubeimp faill" {
+@test "kubeimp with -f fail get context" {
+  local context="xpto1"
+
+  __success_with_param_f_or_full "$__command -f" $context
+}
+
+@test "kubeimp with --from fail get context" {
+  local context="xpto1"
+
+  __success_with_param_f_or_full "$__command --from" $context
+}
+
+function __unsuccess_with_param_f_or_full() {
+  local context="${2}"
+
+  shellmock_expect kubectl --status 1 --match "config current-context" \
+    --output "xpto2"
+
+  local command="${1} "$context
+
+  run ${command}
+
+  [ "$status" -eq 1 ]
+  [ "$output" = "xpto2" ]
+
+  shellmock_verify
+
+  [ "${capture[1]}" = "kubectl-stub config current-context" ]
+}
+
+@test "kubeimp kubeclt get faill" {
   skip
   shellmock_expect kubectl --status 2 --match "$__args" --output "Any Error"
 
@@ -124,11 +154,28 @@ function __with_param_f_or_full() {
   [ "$output" = "Any Error" ]
 }
 
-@test "kubeimp success" {
-  skip
+@test "kubeimp with short options kubectl get success" {
+  __kubeimp_success_all_short_options "${__command_short}"
+}
+
+@test "kubeimp with flul options kubectl get success" {
+  __kubeimp_success_all_short_options "${__command_full}"
+}
+
+function __kubeimp_success_all_short_options() {
+  local command="${1}"
+
+  shellmock_expect kubectl --status 0 --match "config current-context" \
+    --output "$__current_context"
+
+  shellmock_expect kubectl --status 0 --match "config use-context " \
+    "$__current_context"
+
+  shellmock_expect kubectl --status 0 --match "config use-context $__from"
+
   shellmock_expect kubectl --status 0 --match "$__args" --output "Success"
 
-  run ${__command_short}
+  run $command
 
   [ "$status" -eq 0 ]
   [ "$output" = "Success" ]
