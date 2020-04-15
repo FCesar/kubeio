@@ -1,5 +1,20 @@
 #!/usr/bin/env bash
 
+function swap_context() {
+  local result=$(kubectl config use-context $1 2>&1) || error $? result
+}
+
+function error() {
+  local code=$1
+
+  local message=$2
+
+  if [ $code -gt 0 ]; then
+    echo >&2 $message
+    exit $code
+  fi
+}
+
 function help () {
   echo "" 1>&2
   echo " ${1}" 1>&2
@@ -31,9 +46,11 @@ function help () {
 
 # shellcheck disable=SC2015
 [[ "${__usage+x}" ]] || read -r -d '' __usage <<-'EOF' || true # exits non-zero when EOF encountered
-  -n --name    [arg] Filename to process. Required.
-  -t --type    [arg] Filename to process. Required.
-  -h --help          This page
+  -f --from         [arg] Filename to process. Required.
+  -n --namespace    [arg] Filename to process. Required.
+  -r --resource     [arg] Filename to process. Required.
+  -o --output       [arg] Filename to process. Required.
+  -h --help         This page
 EOF
 
 # shellcheck disable=SC2015
@@ -198,13 +215,10 @@ fi
 ### Automatic validation of required option arguments
 ##############################################################################
 
-# help mode
-if [[ "${arg_h:?}" = "1" ]]; then
-  # Help exists with code 1
-  help "Help using ${0}"
-fi
+__i=0
 
 for __b3bp_tmp_varname in ${!__b3bp_tmp_has_arg_*}; do
+  [[ "${arg_h:?}" = "1" ]] && break
   # validate only options which required an argument
   [[ "${!__b3bp_tmp_varname}" = "2" ]] || continue
 
@@ -216,28 +230,46 @@ for __b3bp_tmp_varname in ${!__b3bp_tmp_has_arg_*}; do
   printf -v "__b3bp_tmp_opt_long" '%s' "${!__b3bp_tmp_varname}"
   [[ "${__b3bp_tmp_opt_long:-}" ]] && __b3bp_tmp_opt_long=" (--${__b3bp_tmp_opt_long//_/-})"
 
-  help "Option -${__b3bp_tmp_opt_short}${__b3bp_tmp_opt_long:-} \
-    requires an argument" 1
+  ((__i=__i+1))
 done
+
+[ $__i -eq 4 ] && error 1 "Without arguments"
+
+# help mode
+if [[ "${arg_h:?}" = "1" ]]; then
+  # Help exists with code 1
+  help "Help using ${0}"
+fi
+
+__kubectl=$(kubectl 2>&1 > /dev/null)
+__code=$?
+if [ $__code -eq 127 ] ; then
+    echo >&2 "kubectl is not installed"
+    exit $__code
+fi
+
 
 #kubectl get deployment -o yaml | \
 #    sed 's/\(namespace\:\)\s\(\w\+\)\$/\1 default\$/g' 
 
-__name=${arg_n}
+__from_context=${arg_f}
 
-__type=${arg_t}
+__namespace=${arg_n:-"default"}
 
-__content=$(kubectl get $__name -o $__type 2>&1)
+__resource=${arg_r:-"all"}
 
-__code=$?
+__output=${arg_o:-"json"}
 
-if [ $__code -eq 127 ]; then
-    echo >&2 "kubectl is not installed"
-    exit $__code
-elif [ $__code -gt 0 ]; then
-    echo >&2 $__content
-    exit $__code
-fi
+## Swap Context
+__current_context=$(kubectl config current-context 2>&1) || \
+  error $? "__current_context"
+
+swap_context "$__from_context"
+
+__content=$(kubectl get $__resource -o $__output -n $__namespace 2>&1) || \
+  error $? "$__content"
+
+swap_context "$__current_context"
 
 echo $__content
 
