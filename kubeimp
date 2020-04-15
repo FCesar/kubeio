@@ -262,7 +262,7 @@ __output=${arg_o:-"json"}
 
 ## Swap Context
 __current_context=$(kubectl config current-context 2>&1) || \
-  error $? "__current_context"
+  error $? "$__current_context"
 
 swap_context "$__from_context"
 
