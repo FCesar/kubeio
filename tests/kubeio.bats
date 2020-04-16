@@ -10,7 +10,7 @@ __output="json"
 
 __args="get $__resource -o $__output -n $__namespace"
 
-__command="$BATS_TEST_DIRNAME/../kubeimp"
+__command="$BATS_TEST_DIRNAME/../kubeio"
 
 __command_short="$__command -f $__from -n $__namespace -r $__resource \
     -o $__output"
@@ -52,13 +52,13 @@ teardown()
   [ "$output" = "kubectl is not installed" ]
 }
 
-@test "kubeimp without arguments" {
+@test "kubeio without arguments" {
   run ${__command}
 
   [ "$status" -eq 1 ]
 }
 
-@test "kubeimp -h" {
+@test "kubeio -h" {
   local command="$__command -h"
 
   run ${command}
@@ -66,7 +66,7 @@ teardown()
   [ "$status" -eq 0 ]
 }
 
-@test "kubeimp --help" {
+@test "kubeio --help" {
   local command="$__command --help"
 
   run ${command}
@@ -74,13 +74,13 @@ teardown()
   [ "$status" -eq 0 ]
 }
 
-@test "kubeimp with -f success" {
+@test "kubeio with -f success" {
   local context="xpto1"
 
   __success_with_param_f_or_full "$__command -f" $context
 }
 
-@test "kubeimp with --from success" {
+@test "kubeio with --from success" {
   local context="xpto1"
 
   __success_with_param_f_or_full "$__command --from" $context
@@ -114,13 +114,13 @@ function __success_with_param_f_or_full() {
   [ "${capture[4]}" = "kubectl-stub config use-context $__current_context" ]
 }
 
-@test "kubeimp with -f fail get context" {
+@test "kubeio with -f fail get context" {
   local context="xpto1"
 
   __unsuccess_with_param_f_or_from "$__command -f" $context
 }
 
-@test "kubeimp with --from fail get context" {
+@test "kubeio with --from fail get context" {
   local context="xpto1"
 
   __unsuccess_with_param_f_or_from "$__command --from" $context
@@ -144,14 +144,14 @@ function __unsuccess_with_param_f_or_from () {
   [ "${capture[1]}" = "kubectl-stub config current-context" ]
 }
 
-@test "kubeimp with -f fail same context" {
+@test "kubeio with -f fail same context" {
   local context="xpto1"
 
   __unsuccess_with_param_f_or_from_equal_current_context "$__command -f" \
     $context
 }
 
-@test "kubeimp with --from fail same context" {
+@test "kubeio with --from fail same context" {
   local context="xpto1"
 
   __unsuccess_with_param_f_or_from_equal_current_context "$__command --from" \
@@ -175,7 +175,7 @@ function __unsuccess_with_param_f_or_from_equal_current_context () {
   [ "${capture[1]}" = "kubectl-stub config current-context" ]
 }
 
-@test "kubeimp with short options kubectl get fail" {
+@test "kubeio with short options kubectl get fail" {
   shellmock_expect kubectl --status 0 --match "config current-context" \
     --output "$__current_context"
 
@@ -192,7 +192,7 @@ function __unsuccess_with_param_f_or_from_equal_current_context () {
   [ "$output" = "Any Error" ]
 }
 
-@test "kubeimp with full options kubectl get fail" {
+@test "kubeio with full options kubectl get fail" {
   shellmock_expect kubectl --status 0 --match "config current-context" \
     --output "$__current_context"
 
@@ -209,15 +209,15 @@ function __unsuccess_with_param_f_or_from_equal_current_context () {
   [ "$output" = "Any Error" ]
 }
 
-@test "kubeimp with short options kubectl get success" {
-  __kubeimp_success_all_short_options "${__command_short}"
+@test "kubeio with short options kubectl get success" {
+  __kubeio_success_all_short_options "${__command_short}"
 }
 
-@test "kubeimp with flul options kubectl get success" {
-  __kubeimp_success_all_short_options "${__command_full}"
+@test "kubeio with flul options kubectl get success" {
+  __kubeio_success_all_short_options "${__command_full}"
 }
 
-function __kubeimp_success_all_short_options() {
+function __kubeio_success_all_short_options() {
   local command="${1}"
 
   shellmock_expect kubectl --status 0 --match "config current-context" \
@@ -236,7 +236,7 @@ function __kubeimp_success_all_short_options() {
   [ "$output" = "Success" ]
 }
 
-@test "kubeimp only the -n parameter" {
+@test "kubeio only the -n parameter" {
   local command="$__command -n"
 
   run ${__command}
@@ -244,7 +244,7 @@ function __kubeimp_success_all_short_options() {
   [ "$status" -eq 1 ]
 }
 
-@test "kubeimp only the --namespace parameter" {
+@test "kubeio only the --namespace parameter" {
   local command="$__command --namespace"
 
   run ${__command}
@@ -252,7 +252,7 @@ function __kubeimp_success_all_short_options() {
   [ "$status" -eq 1 ]
 }
 
-@test "kubeimp only the -o parameter" {
+@test "kubeio only the -o parameter" {
   local command="$__command -o"
 
   run ${__command}
@@ -260,7 +260,7 @@ function __kubeimp_success_all_short_options() {
   [ "$status" -eq 1 ]
 }
 
-@test "kubeimp only the --output parameter" {
+@test "kubeio only the --output parameter" {
   local command="$__command --output"
 
   run ${__command}
