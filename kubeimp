@@ -233,7 +233,7 @@ for __b3bp_tmp_varname in ${!__b3bp_tmp_has_arg_*}; do
   ((__i=__i+1))
 done
 
-[ $__i -eq 4 ] && error 1 "Without arguments"
+[ $__i -eq 4 ] && help "Without arguments" 1
 
 # help mode
 if [[ "${arg_h:?}" = "1" ]]; then
@@ -263,6 +263,9 @@ __output=${arg_o:-"json"}
 ## Swap Context
 __current_context=$(kubectl config current-context 2>&1) || \
   error $? "$__current_context"
+
+[ "$__current_context" == "$__from_context" ] && help "-f or --from\
+ '$__from_context' is equal a current context" 1
 
 swap_context "$__from_context"
 
