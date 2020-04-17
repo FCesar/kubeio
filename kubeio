@@ -46,11 +46,11 @@ function help () {
 
 # shellcheck disable=SC2015
 [[ "${__usage+x}" ]] || read -r -d '' __usage <<-'EOF' || true # exits non-zero when EOF encountered
-  -f --from         [arg] Filename to process. Required.
-  -n --namespace    [arg] Filename to process. Required.
-  -r --resource     [arg] Filename to process. Required.
-  -o --output       [arg] Filename to process. Required.
-  -h --help         This page
+  -f --from         [arg] Name from context to use for get infos. Required.
+  -n --namespace    [arg] Namespace to usage. Default=default
+  -r --resource     [arg] Name of resource to wish obtain infos. Default=all
+  -o --output       [arg] Output format. Default=json
+  -h --help         Show message help
 EOF
 
 # shellcheck disable=SC2015
@@ -215,8 +215,6 @@ fi
 ### Automatic validation of required option arguments
 ##############################################################################
 
-__i=0
-
 for __b3bp_tmp_varname in ${!__b3bp_tmp_has_arg_*}; do
   [[ "${arg_h:?}" = "1" ]] && break
   # validate only options which required an argument
@@ -229,11 +227,9 @@ for __b3bp_tmp_varname in ${!__b3bp_tmp_has_arg_*}; do
   __b3bp_tmp_varname="__b3bp_tmp_opt_short2long_${__b3bp_tmp_opt_short}"
   printf -v "__b3bp_tmp_opt_long" '%s' "${!__b3bp_tmp_varname}"
   [[ "${__b3bp_tmp_opt_long:-}" ]] && __b3bp_tmp_opt_long=" (--${__b3bp_tmp_opt_long//_/-})"
-
-  ((__i=__i+1))
+  help "Option -${__b3bp_tmp_opt_short}${__b3bp_tmp_opt_long:-} \
+    requires an argument" 1
 done
-
-[ $__i -eq 4 ] && help "Without arguments" 1
 
 # help mode
 if [[ "${arg_h:?}" = "1" ]]; then
@@ -254,11 +250,11 @@ fi
 
 __from_context=${arg_f}
 
-__namespace=${arg_n:-"default"}
+__namespace=${arg_n}
 
-__resource=${arg_r:-"all"}
+__resource=${arg_r}
 
-__output=${arg_o:-"json"}
+__output=${arg_o}
 
 ## Swap Context
 __current_context=$(kubectl config current-context 2>&1) || \
