@@ -227,6 +227,7 @@ for __b3bp_tmp_varname in ${!__b3bp_tmp_has_arg_*}; do
   __b3bp_tmp_varname="__b3bp_tmp_opt_short2long_${__b3bp_tmp_opt_short}"
   printf -v "__b3bp_tmp_opt_long" '%s' "${!__b3bp_tmp_varname}"
   [[ "${__b3bp_tmp_opt_long:-}" ]] && __b3bp_tmp_opt_long=" (--${__b3bp_tmp_opt_long//_/-})"
+
   help "Option -${__b3bp_tmp_opt_short}${__b3bp_tmp_opt_long:-} \
     requires an argument" 1
 done
@@ -265,10 +266,15 @@ __current_context=$(kubectl config current-context 2>&1) || \
 
 swap_context "$__from_context"
 
-__content=$(kubectl get $__resource -o $__output -n $__namespace 2>&1) || \
-  error $? "$__content"
+__content=$(kubectl get $__resource -o $__output -n $__namespace 2>&1)
+
+__content_status=$?
 
 swap_context "$__current_context"
+
+if [ $__content_status -gt 0 ] ; then
+  error $__content_status "$__content"
+fi
 
 echo $__content
 
