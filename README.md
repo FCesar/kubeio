@@ -1,4 +1,4 @@
-# `kubeio`: Power tools for kubectl import and export your resources
+# `kubeio`: Power tools for kubectl import resources
 ```
  Help using kubeio
 
