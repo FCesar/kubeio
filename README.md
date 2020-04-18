@@ -1,4 +1,5 @@
 # `kubeio`: Power tool for kubectl import resources
+[![Build Status](https://travis-ci.org/FCesar/kubeio.svg?branch=master)](https://travis-ci.org/FCesar/kubeio)
 ```
  Help using kubeio
 
