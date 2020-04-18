@@ -6,7 +6,9 @@ before_install:
   - sudo curl -fsSL -o /usr/bin/kubectl https://storage.googleapis.com/kubernetes-release/release/v1.13.1/bin/linux/amd64/kubectl
   - sudo chmod +x /usr/bin/kubectl
   - sudo git clone https://github.com/capitalone/bash_shell_mock.git
-  - sudo ./bash_shell_mock/install.sh /usr/local
+  - cd bash_shell_mock
+  - sudo ./install.sh /usr/local
+  - cd -
 script:
   - basename /usr/bin
   - bats tests/kubeio.bats
