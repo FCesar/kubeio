@@ -12,6 +12,8 @@ __args="get $__resource -o $__output -n $__namespace"
 
 __command="$BATS_TEST_DIRNAME/../kubeio"
 
+__file="$BATS_TEST_DIRNAME/../$__resource.$__output"
+
 __command_short="$__command -f $__from -n $__namespace -r $__resource \
     -o $__output"
 
@@ -32,6 +34,7 @@ teardown()
   if [ -z "$TEST_FUNCTION" ];then
      shellmock_clean
   fi
+  rm -f $__file
 }
 
 @test "kubectl is not installed short" {
@@ -104,7 +107,10 @@ function __success_with_param_f_or_full() {
   run ${command}
 
   [ "$status" -eq 0 ]
-  [ "$output" = "xpto2" ]
+  [ "$output" = "'$__resource.$__output' file saved successfully" ]
+
+  local content=$(cat "$__file")
+  [ "$content" = "xpto2" ]
 
   shellmock_verify
 
@@ -231,7 +237,17 @@ function __kubeio_success_all_short_options() {
   run ${command}
 
   [ "$status" -eq 0 ]
-  [ "$output" = "Success" ]
+  [ "$output" = "'$__resource.$__output' file saved successfully" ]
+
+  local content=$(cat "$__file")
+  [ "$content" = "Success" ]
+
+  shellmock_verify
+
+  [ "${capture[1]}" = "kubectl-stub config current-context" ]
+  [ "${capture[2]}" = "kubectl-stub config use-context $__from" ]
+  [ "${capture[3]}" = "kubectl-stub $__args" ]
+  [ "${capture[4]}" = "kubectl-stub config use-context $__current_context" ]
 }
 
 @test "kubeio only the -n parameter" {

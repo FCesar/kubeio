@@ -276,6 +276,8 @@ if [ $__content_status -gt 0 ] ; then
   error $__content_status "$__content"
 fi
 
-echo $__content
+__result=$(echo $__content > "$__resource.$__output" 2>&1)
+
+echo "'$__resource.$__output' file saved successfully"
 
 exit 0
