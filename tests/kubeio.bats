@@ -80,16 +80,16 @@ teardown()
 @test "kubeio with -f success" {
   local context="xpto1"
 
-  __success_with_param_f_or_full "$__command -f" $context
+  __success_with_param_f_or_from "$__command -f" $context
 }
 
 @test "kubeio with --from success" {
   local context="xpto1"
 
-  __success_with_param_f_or_full "$__command --from" $context
+  __success_with_param_f_or_from "$__command --from" $context
 }
 
-function __success_with_param_f_or_full() {
+function __success_with_param_f_or_from () {
   local context="${2}"
 
   shellmock_expect kubectl --status 0 --match "config current-context" \
@@ -280,4 +280,85 @@ function __kubeio_success_all_short_options() {
   run ${__command}
 
   [ "$status" -eq 1 ]
+}
+
+@test "kubeio with full options touch fail" {
+  __kubeio_unsuccess_touch_fail "${__command_full}"
+}
+
+@test "kubeio with short options touch fail" {
+  __kubeio_unsuccess_touch_fail "${__command_short}"
+}
+
+function __kubeio_unsuccess_touch_fail() {
+  local command="${1}"
+
+  shellmock_expect kubectl --status 0 --match "config current-context" \
+    --output "$__current_context"
+
+  shellmock_expect kubectl --status 0 --match "config use-context $__from"
+
+  shellmock_expect kubectl --status 0 --match "$__args" --output "Success"
+
+  shellmock_expect kubectl --status 0 --match "config use-context " \
+    "$__current_context"
+
+  shellmock_expect touch --status 1 --match "$__resource.$__output" \
+    --output "fail"
+
+  run ${command}
+
+  [ "$status" -eq 1 ]
+  [ "$output" = "fail" ]
+
+  shellmock_verify
+
+  [ "${capture[1]}" = "kubectl-stub config current-context" ]
+  [ "${capture[2]}" = "kubectl-stub config use-context $__from" ]
+  [ "${capture[3]}" = "kubectl-stub $__args" ]
+  [ "${capture[4]}" = "kubectl-stub config use-context $__current_context" ]
+}
+
+
+@test "kubeio with -f unsuccess touch fail" {
+  local context="xpto1"
+
+  __unsuccess_with_param_f_or_from_touch_fail "$__command -f" $context
+}
+
+@test "kubeio with --from unsuccess touch fail" {
+  local context="xpto1"
+
+  __unsuccess_with_param_f_or_from_touch_fail "$__command --from" $context
+}
+
+function __unsuccess_with_param_f_or_from_touch_fail () {
+  local context="${2}"
+
+  shellmock_expect kubectl --status 0 --match "config current-context" \
+    --output "$__current_context"
+
+  shellmock_expect kubectl --status 0 --match "config use-context $context"
+
+  shellmock_expect kubectl --status 0 --match "$__args" --output "xpto2"
+
+  shellmock_expect kubectl --status 0 --match "config use-context " \
+    "$__current_context"
+
+  local command="${1} "$context
+
+  run ${command}
+
+  [ "$status" -eq 0 ]
+  [ "$output" = "'$__resource.$__output' file saved successfully" ]
+
+  local content=$(cat "$__file")
+  [ "$content" = "xpto2" ]
+
+  shellmock_verify
+
+  [ "${capture[1]}" = "kubectl-stub config current-context" ]
+  [ "${capture[2]}" = "kubectl-stub config use-context $context" ]
+  [ "${capture[3]}" = "kubectl-stub $__args" ]
+  [ "${capture[4]}" = "kubectl-stub config use-context $__current_context" ]
 }

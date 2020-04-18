@@ -276,7 +276,10 @@ if [ $__content_status -gt 0 ] ; then
   error $__content_status "$__content"
 fi
 
-__result=$(echo $__content > "$__resource.$__output" 2>&1)
+__result=$(touch $__resource.$__output 2>&1) || error $? "$__result"
+
+__result=$(echo $__content > "$__resource.$__output" 2>&1) || \
+  error $? "$__result"
 
 echo "'$__resource.$__output' file saved successfully"
 
