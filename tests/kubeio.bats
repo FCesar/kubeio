@@ -80,16 +80,16 @@ teardown()
 @test "kubeio with -f success" {
   local context="xpto1"
 
-  __success_with_param_f_or_from "$__command -f" $context
+  __kubeio_success_with_param_f_or_from "$__command -f" $context
 }
 
 @test "kubeio with --from success" {
   local context="xpto1"
 
-  __success_with_param_f_or_from "$__command --from" $context
+  __kubeio_success_with_param_f_or_from "$__command --from" $context
 }
 
-function __success_with_param_f_or_from () {
+function __kubeio_success_with_param_f_or_from () {
   local context="${2}"
 
   shellmock_expect kubectl --status 0 --match "config current-context" \
@@ -123,16 +123,16 @@ function __success_with_param_f_or_from () {
 @test "kubeio with -f fail get context" {
   local context="xpto1"
 
-  __unsuccess_with_param_f_or_from "$__command -f" $context
+  __kubeio_unsuccess_with_param_f_or_from "$__command -f" $context
 }
 
 @test "kubeio with --from fail get context" {
   local context="xpto1"
 
-  __unsuccess_with_param_f_or_from "$__command --from" $context
+  __kubeio_unsuccess_with_param_f_or_from "$__command --from" $context
 }
 
-function __unsuccess_with_param_f_or_from () {
+function __kubeio_unsuccess_with_param_f_or_from () {
   local context="${2}"
 
   shellmock_expect kubectl --status 1 --match "config current-context" \
@@ -153,18 +153,18 @@ function __unsuccess_with_param_f_or_from () {
 @test "kubeio with -f fail same context" {
   local context="xpto1"
 
-  __unsuccess_with_param_f_or_from_equal_current_context "$__command -f" \
+  __kubeio_unsuccess_with_param_f_or_from_equal_current_context "$__command -f" \
     $context
 }
 
 @test "kubeio with --from fail same context" {
   local context="xpto1"
 
-  __unsuccess_with_param_f_or_from_equal_current_context "$__command --from" \
+  __kubeio_unsuccess_with_param_f_or_from_equal_current_context "$__command --from" \
     $context
 }
 
-function __unsuccess_with_param_f_or_from_equal_current_context () {
+function __kubeio_unsuccess_with_param_f_or_from_equal_current_context () {
   local context="${2}"
 
   shellmock_expect kubectl --status 0 --match "config current-context" \
@@ -214,14 +214,14 @@ function __kubeio_kubecelt_get_fail() {
 }
 
 @test "kubeio with short options kubectl get success" {
-  __kubeio_success_all_short_options "${__command_short}"
+  __kubeio_success_all_short_or_full_options "${__command_short}"
 }
 
-@test "kubeio with flul options kubectl get success" {
-  __kubeio_success_all_short_options "${__command_full}"
+@test "kubeio with full options kubectl get success" {
+  __kubeio_success_all_short_or_full_options "${__command_full}"
 }
 
-function __kubeio_success_all_short_options() {
+function __kubeio_success_all_short_or_full_options() {
   local command="${1}"
 
   shellmock_expect kubectl --status 0 --match "config current-context" \
@@ -283,14 +283,14 @@ function __kubeio_success_all_short_options() {
 }
 
 @test "kubeio with full options touch fail" {
-  __kubeio_unsuccess_touch_fail "${__command_full}"
+  __kubeio_unsuccess_with_short_or_full_params_touch_fail "${__command_full}"
 }
 
 @test "kubeio with short options touch fail" {
-  __kubeio_unsuccess_touch_fail "${__command_short}"
+  __kubeio_unsuccess_with_short_or_full_params_touch_fail "${__command_short}"
 }
 
-function __kubeio_unsuccess_touch_fail() {
+function __kubeio_unsuccess_with_short_or_full_params_touch_fail () {
   local command="${1}"
 
   shellmock_expect kubectl --status 0 --match "config current-context" \
@@ -323,16 +323,16 @@ function __kubeio_unsuccess_touch_fail() {
 @test "kubeio with -f unsuccess touch fail" {
   local context="xpto1"
 
-  __unsuccess_with_param_f_or_from_touch_fail "$__command -f" $context
+  __kubeio_unsuccess_with_f_or_from_params_touch_fail "$__command -f" $context
 }
 
 @test "kubeio with --from unsuccess touch fail" {
   local context="xpto1"
 
-  __unsuccess_with_param_f_or_from_touch_fail "$__command --from" $context
+  __kubeio_unsuccess_with_f_or_from_params_touch_fail "$__command --from" $context
 }
 
-function __unsuccess_with_param_f_or_from_touch_fail () {
+function __kubeio_unsuccess_with_f_or_from_params_touch_fail () {
   local context="${2}"
 
   shellmock_expect kubectl --status 0 --match "config current-context" \
