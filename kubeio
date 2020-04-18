@@ -276,11 +276,16 @@ if [ $__content_status -gt 0 ] ; then
   error $__content_status "$__content"
 fi
 
-__result=$(touch $__resource.$__output 2>&1) || error $? "$__result"
+__file="$__resource.$__output"
 
-__result=$(echo $__content > "$__resource.$__output" 2>&1) || \
+__file=$(echo "$__file" | sed -e "s/\(.*\)\/\(.*\)/\1_\2/" 2>&1) || \
+  error $? $__file
+
+__result=$(touch $__file 2>&1) || error $? "$__result"
+
+__result=$(echo "$__content" > "$__file" 2>&1) || \
   error $? "$__result"
 
-echo "'$__resource.$__output' file saved successfully"
+echo "'$__file' file saved successfully"
 
 exit 0
