@@ -7,4 +7,4 @@ addons:
     packages:
     - bats
     - bc
-script: bats ./tests/kubeio.bats
+script: bats tests/kubeio.bats
