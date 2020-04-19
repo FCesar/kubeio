@@ -1,4 +1,4 @@
-language: ruby
+language: bash
 before_install:
   - sudo add-apt-repository ppa:duggan/bats --yes
   - sudo apt-get update -qq
@@ -9,9 +9,7 @@ before_install:
   - cd bash_shell_mock
   - sudo ./install.sh /usr/local
   - cd -
-before_script:
-  - gem install coveralls
 script:
   - basename /usr/bin
-  - coveralls push
+  - bats tests/kubeio.bats
 
