@@ -23,6 +23,6 @@ after_success:
   - sudo make install
   - cd ../..
   - sudo rm -rf kcov-master
-  - sudo mkdir -p coverage
-  - sudo kcov coverage ./kubeio
-  - bash <(curl -s https://codecov.io/bash)
+  - mkdir -p coverage
+  - kcov coverage ./kubeio
+  - bash <(curl -s https://codecov.io/bash) -s coverage
