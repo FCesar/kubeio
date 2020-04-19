@@ -16,5 +16,5 @@ script:
   - basename /usr/bin
   - bats tests/kubeio.bats
   - bashcov --skip-uncovered ./kubeio
-  - coveralls push
+  - coveralls
 
