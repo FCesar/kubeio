@@ -19,7 +19,8 @@ before_install:
   - sudo make install
   - cd ../..
   - sudo rm -rf kcov-master
-  - mkdir -p coverage
+  - mkdir -p coverage_install
+  - mkdir -p coverage_kubeio
 script:
   - basename /usr/bin
   - bats --tap tests/
