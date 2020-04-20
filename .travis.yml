@@ -5,6 +5,8 @@ before_install:
   - sudo apt-get install -qq bats git libcurl4-openssl-dev libelf-dev libdw-dev cmake
   - sudo curl -fsSL -o /usr/bin/kubectl https://storage.googleapis.com/kubernetes-release/release/v1.13.1/bin/linux/amd64/kubectl
   - sudo chmod +x /usr/bin/kubectl
+  - sudo curl -Lo /usr/bin/codecov -s https://codecov.io/bash
+  - sudo chmod +x /usr/bin/codecov
   - sudo git clone https://github.com/capitalone/bash_shell_mock.git
   - cd bash_shell_mock
   - sudo ./install.sh /usr/local
@@ -24,4 +26,4 @@ script:
   - basename /usr/bin
   - bats --tap tests/
 after_success:
-  - bash <(curl -s https://codecov.io/bash) -s coverage
+  - codecov
