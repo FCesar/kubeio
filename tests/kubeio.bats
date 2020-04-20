@@ -8,7 +8,7 @@ __resource="all"
 
 __output="json"
 
-__kcov="kcov --exclude-path=coverage/,tests/,.travis.yml,.git/ coverage_kubeio"
+__kcov="kcov --exclude-path=coverage/,tests/,.travis.yml,.git/,~/bin,$BATS_TEST_DIRNAME/../install.sh coverage"
 
 __args="get $__resource -o $__output -n $__namespace"
 

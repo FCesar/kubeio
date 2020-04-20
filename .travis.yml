@@ -19,11 +19,9 @@ before_install:
   - sudo make install
   - cd ../..
   - sudo rm -rf kcov-master
-  - mkdir -p coverage_install
-  - mkdir -p coverage_kubeio
+  - mkdir -p coverage
 script:
   - basename /usr/bin
   - bats --tap tests/
 after_success:
-  - bash <(curl -s https://codecov.io/bash) -s coverage_install
-  - bash <(curl -s https://codecov.io/bash) -s coverage_kubeio
+  - bash <(curl -s https://codecov.io/bash) -s coverage

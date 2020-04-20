@@ -1,6 +1,6 @@
 #!/usr/bin/env bats
 
-__kcov="kcov --exclude-path=coverage/,tests/,.travis.yml,.git/ coverage_install"
+__kcov="kcov --exclude-path=coverage/,tests/,.travis.yml,.git/,~/bin,$BATS_TEST_DIRNAME/../kubeio coverage"
 
 __command="$BATS_TEST_DIRNAME/../install.sh"
 
