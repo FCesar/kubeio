@@ -22,6 +22,6 @@ before_install:
   - mkdir -p coverage
 script:
   - basename /usr/bin
-  - bats tests/kubeio.bats
+  - bats --tap tests/
 after_success:
   - bash <(curl -s https://codecov.io/bash) -s coverage
