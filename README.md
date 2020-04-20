@@ -44,7 +44,7 @@ $ kubeio --from minikube --resource deployments/xpto --output wide --namespace d
 'deployments_xpto.wide' file saved successfully
 ```
 
-== Installing Kubeio from source
+### Installing Kubeio from source
 
 Check out a copy of the **kubeio** repository. Then, either add the **kubeio**
 `bin` directory to your `$PATH`, or run the provided `install.sh`
