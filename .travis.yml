@@ -24,4 +24,5 @@ script:
   - basename /usr/bin
   - bats --tap tests/
 after_success:
-  - bash <(curl -s https://codecov.io/bash) -s coverage
+  - bash <(curl -s https://codecov.io/bash) -s coverage_install
+  - bash <(curl -s https://codecov.io/bash) -s coverage_kubeio
