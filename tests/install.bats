@@ -1,6 +1,6 @@
 #!/usr/bin/env bats
 
-__kcov="kcov --exclude-path=coverage/,tests/,.travis.yml,.git/ coverage"
+__kcov="kcov --merge --exclude-path=coverage/,tests/,.travis.yml,.git/ coverage"
 
 __command="$BATS_TEST_DIRNAME/../install.sh"
 
