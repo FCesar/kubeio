@@ -9,10 +9,6 @@ before_install:
   - cd bash_shell_mock
   - sudo ./install.sh /usr/local
   - cd -
-script:
-  - basename /usr/bin
-  - bats tests/kubeio.bats
-after_success:
   - sudo wget https://github.com/SimonKagstrom/kcov/archive/master.tar.gz
   - sudo tar xzf master.tar.gz
   - cd kcov-master
@@ -24,5 +20,8 @@ after_success:
   - cd ../..
   - sudo rm -rf kcov-master
   - mkdir -p coverage
-  - kcov --coveralls-id=$TRAVIS_JOB_ID coverage ./kubeio
+script:
+  - basename /usr/bin
+  - bats tests/kubeio.bats
+after_success:
   - bash <(curl -s https://codecov.io/bash) -s coverage

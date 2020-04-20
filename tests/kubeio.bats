@@ -8,6 +8,8 @@ __resource="all"
 
 __output="json"
 
+__kcov="kcov --exclude-path=coverage/,tests/,.travis.yml,.git/ coverage"
+
 __args="get $__resource -o $__output -n $__namespace"
 
 __command="$BATS_TEST_DIRNAME/../kubeio"
@@ -22,7 +24,7 @@ __command_full="$__command --from $__from --namespace $__namespace \
 
 __current_context="xpto0"
 
-#kubectl get $__resource -o $__output
+__last_command=""
 
 setup() {
   . shellmock
@@ -31,8 +33,12 @@ setup() {
 
 teardown()
 {
-  if [ -z "$TEST_FUNCTION" ];then
-     shellmock_clean
+  if [ "$__last_command" != "" ] ; then
+    $__kcov $__last_command
+  fi
+
+  if [ -z "$TEST_FUNCTION" ] ; then
+    shellmock_clean
   fi
   rm -f $__file
 }
@@ -40,7 +46,9 @@ teardown()
 @test "kubectl is not installed short" {
   shellmock_expect kubectl --status 127
 
-  run ${__command_short}
+  __last_command=$__command_short
+
+  run ${__last_command}
 
   [ "$status" -eq 127 ]
   [ "$output" = "kubectl is not installed" ]
@@ -49,30 +57,36 @@ teardown()
 @test "kubectl is not installed full" {
   shellmock_expect kubectl --status 127
 
-  run ${__command_full}
+  __last_command=$__command_full
+
+  run ${__last_command}
 
   [ "$status" -eq 127 ]
   [ "$output" = "kubectl is not installed" ]
 }
 
 @test "kubeio without arguments" {
-  run ${__command}
+  __last_command=$__command
+
+  run ${__last_command}
 
   [ "$status" -eq 1 ]
 }
 
 @test "kubeio -h" {
-  local command="$__command -h"
+  __last_command="$__command -h"
 
-  run ${command}
+  run ${__last_command}
 
   [ "$status" -eq 0 ]
+
+  run $__kcov $command
 }
 
 @test "kubeio --help" {
-  local command="$__command --help"
+  __last_command="$__command --help"
 
-  run ${command}
+  run ${__last_command}
 
   [ "$status" -eq 0 ]
 }
@@ -102,11 +116,11 @@ function __kubeio_success_with_param_f_or_from () {
   shellmock_expect kubectl --status 0 --match "config use-context " \
     "$__current_context"
 
-  local command="${1} "$context
+  __last_command="${1} "$context
 
   local file=$__resource.$__output
 
-  run ${command}
+  run ${__last_command}
 
   [ "$status" -eq 0 ]
   [ "$output" = "'$file' file saved successfully" ]
@@ -137,9 +151,9 @@ function __kubeio_unsuccess_with_param_f_or_from () {
   shellmock_expect kubectl --status 1 --match "config current-context" \
     --output "xpto2"
 
-  local command="${1} "$context
+  __last_command="${1} "$context
 
-  run ${command}
+  run ${__last_command}
 
   [ "$status" -eq 1 ]
   [ "$output" = "xpto2" ]
@@ -169,9 +183,9 @@ function __kubeio_unsuccess_with_param_f_or_from_equal_current_context () {
   shellmock_expect kubectl --status 0 --match "config current-context" \
     --output "$context"
 
-  local command="${1} "$context
+  __last_command="${1} "$context
 
-  run ${command}
+  run ${__last_command}
 
   [ "$status" -eq 1 ]
 
@@ -199,7 +213,9 @@ function __kubeio_kubecelt_get_fail() {
   shellmock_expect kubectl --status 0 --match "config use-context " \
     "$__current_context"
 
-  run ${1}
+  __last_command="${1}"
+
+  run ${__last_command}
 
   [ "$status" -eq 2 ]
   [ "$output" = "Any Error" ]
@@ -221,8 +237,6 @@ function __kubeio_kubecelt_get_fail() {
 }
 
 function __kubeio_success_all_short_or_full_options() {
-  local command="${1}"
-
   shellmock_expect kubectl --status 0 --match "config current-context" \
     --output "$__current_context"
 
@@ -233,7 +247,9 @@ function __kubeio_success_all_short_or_full_options() {
   shellmock_expect kubectl --status 0 --match "config use-context " \
     "$__current_context"
 
-  run ${command}
+  __last_command="${1}"
+
+  run ${__last_command}
 
   local file=$(echo $__resource.$__output | sed -e "s/\(.*\)\/\(.*\)/\1_\2/" 2>&1)
 
@@ -252,33 +268,33 @@ function __kubeio_success_all_short_or_full_options() {
 }
 
 @test "kubeio only the -n parameter" {
-  local command="$__command -n"
+  __last_command="$__command -n"
 
-  run ${__command}
+  run ${__last_command}
 
-  [ "$status" -eq 1 ]
+  [ "$status" -eq 0 ]
 }
 
 @test "kubeio only the --namespace parameter" {
-  local command="$__command --namespace"
+  __last_command="$__command --namespace"
 
-  run ${__command}
+  run ${__last_command}
 
   [ "$status" -eq 1 ]
 }
 
 @test "kubeio only the -o parameter" {
-  local command="$__command -o"
+  __last_command="$__command -o"
 
-  run ${__command}
+  run ${__last_command}
 
-  [ "$status" -eq 1 ]
+  [ "$status" -eq 0 ]
 }
 
 @test "kubeio only the --output parameter" {
-  local command="$__command --output"
+  __last_command="$__command --output"
 
-  run ${__command}
+  run ${__last_command}
 
   [ "$status" -eq 1 ]
 }
@@ -292,8 +308,6 @@ function __kubeio_success_all_short_or_full_options() {
 }
 
 function __kubeio_unsuccess_with_short_or_full_params_touch_fail () {
-  local command="${1}"
-
   shellmock_expect kubectl --status 0 --match "config current-context" \
     --output "$__current_context"
 
@@ -307,7 +321,9 @@ function __kubeio_unsuccess_with_short_or_full_params_touch_fail () {
   shellmock_expect touch --status 1 --match "$__resource.$__output" \
     --output "fail"
 
-  run ${command}
+  __last_command="${1}"
+
+  run ${__last_command}
 
   [ "$status" -eq 1 ]
   [ "$output" = "fail" ]
@@ -349,9 +365,9 @@ function __kubeio_unsuccess_with_f_or_from_params_touch_fail () {
   shellmock_expect touch --status 1 --match "$__resource.$__output" \
     --output "fail"
 
-  local command="${1} "$context
+  __last_command="${1} "$context
 
-  run ${command}
+  run ${__last_command}
 
   [ "$status" -eq 1 ]
   [ "$output" = "fail" ]
@@ -363,8 +379,6 @@ function __kubeio_unsuccess_with_f_or_from_params_touch_fail () {
   [ "${capture[3]}" = "kubectl-stub $__args" ]
   [ "${capture[4]}" = "kubectl-stub config use-context $__current_context" ]
 }
-
-
 
 @test "kubeio with -f and -r success" {
   local context="xpto1"
@@ -395,9 +409,9 @@ function __kubeio_success_with_param_f_or_from_and_r_or_resource () {
   shellmock_expect kubectl --status 0 --match "config use-context " \
     "$__current_context"
 
-  local command="${1} "$context
+  __last_command="${1} "$context
 
-  run ${command}
+  run ${__last_command}
 
   local file=$(echo $__resource.$__output | sed -e "s/\(.*\)\/\(.*\)/\1_\2/" 2>&1)
 
