@@ -18,7 +18,6 @@ teardown()
   if [ -z "$TEST_FUNCTION" ] ; then
     shellmock_clean
   fi
-  rm -f $__file
 }
 
 @test "install.sh fail" {
