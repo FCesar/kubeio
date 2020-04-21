@@ -33,7 +33,7 @@ setup() {
 
 teardown()
 {
-  if [ "$__last_command" != "" ] ; then
+  if [ -z "$BATS_TEST_SKIPPED" ] && [ ! -z "$__last_command" ] ; then
     $__kcov $__last_command
   fi
 
