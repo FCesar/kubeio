@@ -27,8 +27,9 @@ __current_context="xpto0"
 __last_command=""
 
 setup() {
-  . shellmock
+  . $BATS_TEST_DIRNAME/shellmock
   shellmock_clean
+  shellmock_expect kubectl
 }
 
 teardown()
@@ -37,13 +38,12 @@ teardown()
     $__kcov $__last_command
   fi
 
-  if [ -z "$TEST_FUNCTION" ] ; then
-    shellmock_clean
-  fi
+  shellmock_clean
   rm -f $__file
 }
 
 @test "kubectl is not installed short" {
+  shellmock_clean
   shellmock_expect kubectl --status 127
 
   __last_command=$__command_short
@@ -55,6 +55,7 @@ teardown()
 }
 
 @test "kubectl is not installed full" {
+  shellmock_clean
   shellmock_expect kubectl --status 127
 
   __last_command=$__command_full
@@ -79,8 +80,6 @@ teardown()
   run ${__last_command}
 
   [ "$status" -eq 0 ]
-
-  run $__kcov $command
 }
 
 @test "kubeio --help" {
@@ -106,15 +105,13 @@ teardown()
 function __kubeio_success_with_param_f_or_from () {
   local context="${2}"
 
-  shellmock_expect kubectl --status 0 --match "config current-context" \
-    --output "$__current_context"
+  shellmock_expect kubectl --status 0 --match "config current-context" --output "$__current_context"
 
   shellmock_expect kubectl --status 0 --match "config use-context $context"
 
   shellmock_expect kubectl --status 0 --match "$__args" --output "xpto2"
 
-  shellmock_expect kubectl --status 0 --match "config use-context " \
-    "$__current_context"
+  shellmock_expect kubectl --status 0 --match "config use-context $__current_context"
 
   __last_command="${1} "$context
 
@@ -148,8 +145,7 @@ function __kubeio_success_with_param_f_or_from () {
 function __kubeio_unsuccess_with_param_f_or_from () {
   local context="${2}"
 
-  shellmock_expect kubectl --status 1 --match "config current-context" \
-    --output "xpto2"
+  shellmock_expect kubectl --status 1 --match "config current-context" --output "xpto2"
 
   __last_command="${1} "$context
 
@@ -166,22 +162,19 @@ function __kubeio_unsuccess_with_param_f_or_from () {
 @test "kubeio with -f fail same context" {
   local context="xpto1"
 
-  __kubeio_unsuccess_with_param_f_or_from_equal_current_context "$__command -f" \
-    $context
+  __kubeio_unsuccess_with_param_f_or_from_equal_current_context "$__command -f" $context
 }
 
 @test "kubeio with --from fail same context" {
   local context="xpto1"
 
-  __kubeio_unsuccess_with_param_f_or_from_equal_current_context "$__command --from" \
-    $context
+  __kubeio_unsuccess_with_param_f_or_from_equal_current_context "$__command --from" $context
 }
 
 function __kubeio_unsuccess_with_param_f_or_from_equal_current_context () {
   local context="${2}"
 
-  shellmock_expect kubectl --status 0 --match "config current-context" \
-    --output "$context"
+  shellmock_expect kubectl --status 0 --match "config current-context" --output "$context"
 
   __last_command="${1} "$context
 
@@ -195,23 +188,21 @@ function __kubeio_unsuccess_with_param_f_or_from_equal_current_context () {
 }
 
 @test "kubeio with short options kubectl get fail" {
-  __kubeio_kubecelt_get_fail "${__command_short}"
+  __kubeio_kubecelt_get_fail "$__command_short"
 }
 
 @test "kubeio with full options kubectl get fail" {
-  __kubeio_kubecelt_get_fail "${__command_full}"
+  __kubeio_kubecelt_get_fail "$__command_full"
 }
 
 function __kubeio_kubecelt_get_fail() {
-  shellmock_expect kubectl --status 0 --match "config current-context" \
-    --output "$__current_context"
+  shellmock_expect kubectl --status 0 --match "config current-context" --output "$__current_context"
 
   shellmock_expect kubectl --status 0 --match "config use-context $__from"
 
   shellmock_expect kubectl --status 2 --match "$__args" --output "Any Error"
 
-  shellmock_expect kubectl --status 0 --match "config use-context " \
-    "$__current_context"
+  shellmock_expect kubectl --status 0 --match "config use-context $__current_context"
 
   __last_command="${1}"
 
@@ -229,23 +220,21 @@ function __kubeio_kubecelt_get_fail() {
 }
 
 @test "kubeio with short options kubectl get success" {
-  __kubeio_success_all_short_or_full_options "${__command_short}"
+  __kubeio_success_all_short_or_full_options "$__command_short"
 }
 
 @test "kubeio with full options kubectl get success" {
-  __kubeio_success_all_short_or_full_options "${__command_full}"
+  __kubeio_success_all_short_or_full_options "$__command_full"
 }
 
 function __kubeio_success_all_short_or_full_options() {
-  shellmock_expect kubectl --status 0 --match "config current-context" \
-    --output "$__current_context"
+  shellmock_expect kubectl --status 0 --match "config current-context" --output "$__current_context"
 
   shellmock_expect kubectl --status 0 --match "config use-context $__from"
 
   shellmock_expect kubectl --status 0 --match "$__args" --output "Success"
 
-  shellmock_expect kubectl --status 0 --match "config use-context " \
-    "$__current_context"
+  shellmock_expect kubectl --status 0 --match "config use-context $__current_context"
 
   __last_command="${1}"
 
@@ -300,26 +289,23 @@ function __kubeio_success_all_short_or_full_options() {
 }
 
 @test "kubeio with full options touch fail" {
-  __kubeio_unsuccess_with_short_or_full_params_touch_fail "${__command_full}"
+  __kubeio_unsuccess_with_short_or_full_params_touch_fail "$__command_full"
 }
 
 @test "kubeio with short options touch fail" {
-  __kubeio_unsuccess_with_short_or_full_params_touch_fail "${__command_short}"
+  __kubeio_unsuccess_with_short_or_full_params_touch_fail "$__command_short"
 }
 
 function __kubeio_unsuccess_with_short_or_full_params_touch_fail () {
-  shellmock_expect kubectl --status 0 --match "config current-context" \
-    --output "$__current_context"
+  shellmock_expect kubectl --status 0 --match "config current-context" --output "$__current_context"
 
   shellmock_expect kubectl --status 0 --match "config use-context $__from"
 
   shellmock_expect kubectl --status 0 --match "$__args" --output "Success"
 
-  shellmock_expect kubectl --status 0 --match "config use-context " \
-    "$__current_context"
+  shellmock_expect kubectl --status 0 --match "config use-context $__current_context"
 
-  shellmock_expect touch --status 1 --match "$__resource.$__output" \
-    --output "fail"
+  shellmock_expect touch --status 1 --match "$__resource.$__output" --output "fail"
 
   __last_command="${1}"
 
@@ -352,18 +338,15 @@ function __kubeio_unsuccess_with_short_or_full_params_touch_fail () {
 function __kubeio_unsuccess_with_f_or_from_params_touch_fail () {
   local context="${2}"
 
-  shellmock_expect kubectl --status 0 --match "config current-context" \
-    --output "$__current_context"
+  shellmock_expect kubectl --status 0 --match "config current-context" --output "$__current_context"
 
   shellmock_expect kubectl --status 0 --match "config use-context $context"
 
   shellmock_expect kubectl --status 0 --match "$__args" --output "xpto2"
 
-  shellmock_expect kubectl --status 0 --match "config use-context " \
-    "$__current_context"
+  shellmock_expect kubectl --status 0 --match "config use-context $__current_context"
 
-  shellmock_expect touch --status 1 --match "$__resource.$__output" \
-    --output "fail"
+  shellmock_expect touch --status 1 --match "$__resource.$__output" --output "fail"
 
   __last_command="${1} "$context
 
@@ -384,30 +367,26 @@ function __kubeio_unsuccess_with_f_or_from_params_touch_fail () {
   local context="xpto1"
   local resource="deployments/xpto-1"
 
-  __kubeio_success_with_param_f_or_from_and_r_or_resource \
-    "$__command -f" $context "-r" resource
+  __kubeio_success_with_param_f_or_from_and_r_or_resource "$__command -f" $context "-r" resource
 }
 
 @test "kubeio with --from and --resource success" {
   local context="xpto1"
   local resource="deployments/xpto-1"
 
-  __kubeio_success_with_param_f_or_from_and_r_or_resource \
-    "$__command --from" $context "--resource" resource
+  __kubeio_success_with_param_f_or_from_and_r_or_resource "$__command --from" $context "--resource" resource
 }
 
 function __kubeio_success_with_param_f_or_from_and_r_or_resource () {
   local context="${2}"
 
-  shellmock_expect kubectl --status 0 --match "config current-context" \
-    --output "$__current_context"
+  shellmock_expect kubectl --status 0 --match "config current-context" --output "$__current_context"
 
   shellmock_expect kubectl --status 0 --match "config use-context $context"
 
   shellmock_expect kubectl --status 0 --match "$__args" --output "xpto2"
 
-  shellmock_expect kubectl --status 0 --match "config use-context " \
-    "$__current_context"
+  shellmock_expect kubectl --status 0 --match "config use-context $__current_context"
 
   __last_command="${1} "$context
 
