@@ -8,6 +8,7 @@
   -n --namespace    [arg] Namespace to usage. Default=default
   -r --resource     [arg] Name of resource to wish obtain infos. Default=all
   -o --output       [arg] Output format. Default=json
+  -a --apply        Obtain a resource from '-f or --from' and apply it to the current cluster.
   -h --help         Show message help
 ```
 
@@ -27,6 +28,9 @@ $ kubeio -f minikube -r deployments/xpto -o wide
 
 $ kubeio -f minikube -r deployments/xpto -o wide -n default
 'deployments_xpto.wide' file saved successfully
+
+$ kubeio -f minikube -r deployments/xpto -o wide -n default -a
+'deployments/xpto' applied with successfully
 ```
 
 #### Full 
@@ -42,6 +46,9 @@ $ kubeio --from minikube --resource deployments/xpto --output wide
 
 $ kubeio --from minikube --resource deployments/xpto --output wide --namespace default
 'deployments_xpto.wide' file saved successfully
+
+$ kubeio --from minikube --resource deployments/xpto --output wide --namespace default --apply
+'deployments/xpto' applied with successfully
 ```
 
 ### Installing Kubeio from source

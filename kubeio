@@ -71,7 +71,7 @@ function help () {
   -n --namespace    [arg] Namespace to usage. Default=default
   -r --resource     [arg] Name of resource to wish obtain infos. Default=all
   -o --output       [arg] Output format. Default=json
-  -a --apply       Output format.
+  -a --apply        Obtain a resource from '-f or --from' and apply it to the current cluster.
   -h --help         Show message help
 EOF
 
