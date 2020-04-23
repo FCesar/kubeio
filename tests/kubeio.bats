@@ -34,7 +34,7 @@ setup() {
 
 teardown()
 {
-  if [ -z "$BATS_TEST_SKIPPED" ] && [ ! -z "$__last_command" ] ; then
+  if [ -z "$BATS_TEST_SKIPPED" ] && [ "$BATS_TEST_COMPLETED" -eq 1 ] && [ ! -z "$__last_command" ] ; then
     $__kcov $__last_command
   fi
 
@@ -404,6 +404,40 @@ function __kubeio_success_with_param_f_or_from_and_r_or_resource () {
 
   [ "${capture[1]}" = "kubectl-stub config current-context" ]
   [ "${capture[2]}" = "kubectl-stub config use-context $context" ]
+  [ "${capture[3]}" = "kubectl-stub $__args" ]
+  [ "${capture[4]}" = "kubectl-stub config use-context $__current_context" ]
+}
+
+@test "kubeio with short options and -a success" {
+  __kubeio_success_all_short_or_full_more_a_or_apply_options "$__command_short -a"
+}
+
+@test "kubeio with full options and --apply success" {
+  __kubeio_success_all_short_or_full_more_a_or_apply_options "$__command_full --apply"
+}
+
+function __kubeio_success_all_short_or_full_more_a_or_apply_options() {
+  shellmock_expect kubectl --status 0 --match "config current-context" --output "$__current_context"
+
+  shellmock_expect kubectl --status 0 --match "config use-context $__from"
+
+  shellmock_expect kubectl --status 0 --match "$__args" --output "Success"
+
+  shellmock_expect kubectl --status 0 --match "config use-context $__current_context"
+
+  shellmock_expect kubectl --status 0 --match "apply -f -"
+
+  __last_command="${1}"
+
+  run ${__last_command}
+
+  [ "$status" -eq 0 ]
+  [ "$output" = "'$__resource' applied with successfully" ]
+
+  shellmock_verify
+
+  [ "${capture[1]}" = "kubectl-stub config current-context" ]
+  [ "${capture[2]}" = "kubectl-stub config use-context $__from" ]
   [ "${capture[3]}" = "kubectl-stub $__args" ]
   [ "${capture[4]}" = "kubectl-stub config use-context $__current_context" ]
 }

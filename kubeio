@@ -71,6 +71,7 @@ function help () {
   -n --namespace    [arg] Namespace to usage. Default=default
   -r --resource     [arg] Name of resource to wish obtain infos. Default=all
   -o --output       [arg] Output format. Default=json
+  -a --apply       Output format.
   -h --help         Show message help
 EOF
 
@@ -272,6 +273,8 @@ __resource=${arg_r:-}
 
 __output=${arg_o:-}
 
+__applay=${arg_a:-}
+
 ## Swap Context
 __current_context=$(kubectl config current-context 2>&1) || \
   error $? "$__current_context"
@@ -291,16 +294,23 @@ if [ $__content_status -gt 0 ] ; then
   error $__content_status "$__content"
 fi
 
-__file="$__resource.$__output"
+if [ "${__applay}" -eq 0  ] ; then
+  __file="$__resource.$__output"
 
-__file=$(echo "$__file" | sed -e "s/\(.*\)\/\(.*\)/\1_\2/" 2>&1) || \
-  error $? "$__file"
+  __file=$(echo "$__file" | sed -e "s/\(.*\)\/\(.*\)/\1_\2/" 2>&1) || \
+    error $? "$__file"
 
-__result=$(touch "$__file" 2>&1) || error $? "$__result"
+  __result=$(touch "$__file" 2>&1) || error $? "$__result"
 
-__result=$(printf "%s" "$__content" > "$__file" 2>&1) || \
-  error $? "$__result"
+  __result=$(printf "%s" "$__content" > "$__file" 2>&1) || \
+    error $? "$__result"
 
-echo "'$__file' file saved successfully"
+  echo "'$__file' file saved successfully"
+else
+  __result=$(printf "%s" "$__content" | kubectl apply -f - 2>&1) || \
+    error $? "$__result"
+
+  echo "'$__resource' applied with successfully"
+fi
 
 exit 0
