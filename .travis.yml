@@ -25,5 +25,6 @@ before_install:
 script:
   - basename /usr/bin
   - bats --tap tests/
+  - shellcheck kubeio
 after_success:
   - codecov
