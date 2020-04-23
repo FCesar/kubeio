@@ -441,3 +441,37 @@ function __kubeio_success_all_short_or_full_more_a_or_apply_options() {
   [ "${capture[3]}" = "kubectl-stub $__args" ]
   [ "${capture[4]}" = "kubectl-stub config use-context $__current_context" ]
 }
+
+@test "kubeio with short options and -a unsuccess" {
+  __kubeio_success_all_short_or_full_more_a_or_apply_apply_fail "$__command_short -a"
+}
+
+@test "kubeio with full options and --apply unsuccess" {
+  __kubeio_success_all_short_or_full_more_a_or_apply_apply_fail "$__command_full --apply"
+}
+
+function __kubeio_success_all_short_or_full_more_a_or_apply_apply_fail () {
+  shellmock_expect kubectl --status 0 --match "config current-context" --output "$__current_context"
+
+  shellmock_expect kubectl --status 0 --match "config use-context $__from"
+
+  shellmock_expect kubectl --status 0 --match "$__args" --output "Success"
+
+  shellmock_expect kubectl --status 0 --match "config use-context $__current_context"
+
+  shellmock_expect kubectl --status 1 --match "apply -f -" --output "fail"
+
+  __last_command="${1}"
+
+  run ${__last_command}
+
+  [ "$status" -eq 1 ]
+  [ "$output" = "fail" ]
+
+  shellmock_verify
+
+  [ "${capture[1]}" = "kubectl-stub config current-context" ]
+  [ "${capture[2]}" = "kubectl-stub config use-context $__from" ]
+  [ "${capture[3]}" = "kubectl-stub $__args" ]
+  [ "${capture[4]}" = "kubectl-stub config use-context $__current_context" ]
+}
