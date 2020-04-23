@@ -15,18 +15,24 @@
 #See the License for the specific language governing permissions and
 #limitations under the License.
 
-function swap_context() {
-  local result=$(kubectl config use-context $1 2>&1) || error $? result
-}
-
 function error() {
   local code=$1
 
   local message=$2
 
-  if [ $code -gt 0 ]; then
-    echo >&2 $message
-    exit $code
+  if [ "$code" -gt 0 ]; then
+    echo >&2 "$message"
+    exit "$code"
+  fi
+}
+
+function swap_context() {
+  local result
+  result=$(kubectl config use-context "$1" 2>&1)
+  local code=$?
+
+  if [ "$code" -ge 0 ] ; then
+    error $? "$result"
   fi
 }
 
@@ -44,7 +50,7 @@ function help () {
 
   code=${2:-0}
 
-  exit $code
+  exit "$code"
 }
 
 
@@ -253,24 +259,18 @@ if [[ "${arg_h:?}" = "1" ]]; then
   help "Help using ${0}"
 fi
 
-__kubectl=$(kubectl 2>&1 > /dev/null)
-__code=$?
-if [ $__code -eq 127 ] ; then
-    echo >&2 "kubectl is not installed"
-    exit $__code
-fi
-
+kubectl > /dev/null 2>&1 || error $? "kubectl is not installed"
 
 #kubectl get deployment -o yaml | \
 #    sed 's/\(namespace\:\)\s\(\w\+\)\$/\1 default\$/g' 
 
-__from_context=${arg_f}
+__from_context=${arg_f:-}
 
-__namespace=${arg_n}
+__namespace=${arg_n:-}
 
-__resource=${arg_r}
+__resource=${arg_r:-}
 
-__output=${arg_o}
+__output=${arg_o:-}
 
 ## Swap Context
 __current_context=$(kubectl config current-context 2>&1) || \
@@ -281,7 +281,7 @@ __current_context=$(kubectl config current-context 2>&1) || \
 
 swap_context "$__from_context"
 
-__content=$(kubectl get $__resource -o $__output -n $__namespace 2>&1)
+__content=$(kubectl get "$__resource" -o "$__output" -n "$__namespace" 2>&1)
 
 __content_status=$?
 
@@ -294,11 +294,11 @@ fi
 __file="$__resource.$__output"
 
 __file=$(echo "$__file" | sed -e "s/\(.*\)\/\(.*\)/\1_\2/" 2>&1) || \
-  error $? $__file
+  error $? "$__file"
 
-__result=$(touch $__file 2>&1) || error $? "$__result"
+__result=$(touch "$__file" 2>&1) || error $? "$__result"
 
-__result=$(echo "$__content" > "$__file" 2>&1) || \
+__result=$(printf "%s" "$__content" > "$__file" 2>&1) || \
   error $? "$__result"
 
 echo "'$__file' file saved successfully"
