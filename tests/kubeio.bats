@@ -10,7 +10,9 @@ __output="json"
 
 __kcov="kcov --exclude-path=coverage/,tests/,.travis.yml,.git/,~/bin,$BATS_TEST_DIRNAME/../install.sh coverage"
 
-__args="get $__resource -o $__output -n $__namespace"
+__mask_args="get %s -o %s -n %s"
+
+__args=$(printf "$__mask_args" "$__resource" "$__output" "$__namespace")
 
 __command="$BATS_TEST_DIRNAME/../kubeio"
 
@@ -93,17 +95,18 @@ teardown()
 @test "kubeio with -f success" {
   local context="xpto1"
 
-  __kubeio_success_with_param_f_or_from "$__command -f" $context
+  __kubeio_success_with_param_f_or_from "$__command -f %s" $context
 }
 
 @test "kubeio with --from success" {
   local context="xpto1"
 
-  __kubeio_success_with_param_f_or_from "$__command --from" $context
+  __kubeio_success_with_param_f_or_from "$__command --from %s" $context
 }
 
 function __kubeio_success_with_param_f_or_from () {
   local context="${2}"
+  __last_command=$(printf "${1} ""$context")
 
   shellmock_expect kubectl --status 0 --match "config current-context" --output "$__current_context"
 
@@ -113,14 +116,12 @@ function __kubeio_success_with_param_f_or_from () {
 
   shellmock_expect kubectl --status 0 --match "config use-context $__current_context"
 
-  __last_command="${1} "$context
-
-  local file=$__resource.$__output
+  shellmock_expect kubectl --status 0 --match "apply -f -"
 
   run ${__last_command}
 
   [ "$status" -eq 0 ]
-  [ "$output" = "'$file' file saved successfully" ]
+  [ "$output" = "'$__resource' applied with successfully" ]
 
   shellmock_verify
 
@@ -236,17 +237,14 @@ function __kubeio_success_all_short_or_full_options() {
 
   shellmock_expect kubectl --status 0 --match "config use-context $__current_context"
 
+  shellmock_expect kubectl --status 0 --match "apply -f -"
+
   __last_command="${1}"
 
   run ${__last_command}
 
-  local file=$(echo $__resource.$__output | sed -e "s/\(.*\)\/\(.*\)/\1_\2/" 2>&1)
-
   [ "$status" -eq 0 ]
-  [ "$output" = "'$file' file saved successfully" ]
-
-  local content=$(cat "$file")
-  [ "$content" = "Success" ]
+  [ "$output" = "'$__resource' applied with successfully" ]
 
   shellmock_verify
 
@@ -288,169 +286,15 @@ function __kubeio_success_all_short_or_full_options() {
   [ "$status" -eq 1 ]
 }
 
-@test "kubeio with full options touch fail" {
-  __kubeio_unsuccess_with_short_or_full_params_touch_fail "$__command_full"
+@test "kubeio with full options apply fail" {
+  __kubeio_unsuccess_with_short_or_full_params_apply_fail "$__command_full"
 }
 
-@test "kubeio with short options touch fail" {
-  __kubeio_unsuccess_with_short_or_full_params_touch_fail "$__command_short"
+@test "kubeio with short options apply fail" {
+  __kubeio_unsuccess_with_short_or_full_params_apply_fail "$__command_short"
 }
 
-function __kubeio_unsuccess_with_short_or_full_params_touch_fail () {
-  shellmock_expect kubectl --status 0 --match "config current-context" --output "$__current_context"
-
-  shellmock_expect kubectl --status 0 --match "config use-context $__from"
-
-  shellmock_expect kubectl --status 0 --match "$__args" --output "Success"
-
-  shellmock_expect kubectl --status 0 --match "config use-context $__current_context"
-
-  shellmock_expect touch --status 1 --match "$__resource.$__output" --output "fail"
-
-  __last_command="${1}"
-
-  run ${__last_command}
-
-  [ "$status" -eq 1 ]
-  [ "$output" = "fail" ]
-
-  shellmock_verify
-
-  [ "${capture[1]}" = "kubectl-stub config current-context" ]
-  [ "${capture[2]}" = "kubectl-stub config use-context $__from" ]
-  [ "${capture[3]}" = "kubectl-stub $__args" ]
-  [ "${capture[4]}" = "kubectl-stub config use-context $__current_context" ]
-}
-
-
-@test "kubeio with -f unsuccess touch fail" {
-  local context="xpto1"
-
-  __kubeio_unsuccess_with_f_or_from_params_touch_fail "$__command -f" $context
-}
-
-@test "kubeio with --from unsuccess touch fail" {
-  local context="xpto1"
-
-  __kubeio_unsuccess_with_f_or_from_params_touch_fail "$__command --from" $context
-}
-
-function __kubeio_unsuccess_with_f_or_from_params_touch_fail () {
-  local context="${2}"
-
-  shellmock_expect kubectl --status 0 --match "config current-context" --output "$__current_context"
-
-  shellmock_expect kubectl --status 0 --match "config use-context $context"
-
-  shellmock_expect kubectl --status 0 --match "$__args" --output "xpto2"
-
-  shellmock_expect kubectl --status 0 --match "config use-context $__current_context"
-
-  shellmock_expect touch --status 1 --match "$__resource.$__output" --output "fail"
-
-  __last_command="${1} "$context
-
-  run ${__last_command}
-
-  [ "$status" -eq 1 ]
-  [ "$output" = "fail" ]
-
-  shellmock_verify
-
-  [ "${capture[1]}" = "kubectl-stub config current-context" ]
-  [ "${capture[2]}" = "kubectl-stub config use-context $context" ]
-  [ "${capture[3]}" = "kubectl-stub $__args" ]
-  [ "${capture[4]}" = "kubectl-stub config use-context $__current_context" ]
-}
-
-@test "kubeio with -f and -r success" {
-  local context="xpto1"
-  local resource="deployments/xpto-1"
-
-  __kubeio_success_with_param_f_or_from_and_r_or_resource "$__command -f" $context "-r" resource
-}
-
-@test "kubeio with --from and --resource success" {
-  local context="xpto1"
-  local resource="deployments/xpto-1"
-
-  __kubeio_success_with_param_f_or_from_and_r_or_resource "$__command --from" $context "--resource" resource
-}
-
-function __kubeio_success_with_param_f_or_from_and_r_or_resource () {
-  local context="${2}"
-
-  shellmock_expect kubectl --status 0 --match "config current-context" --output "$__current_context"
-
-  shellmock_expect kubectl --status 0 --match "config use-context $context"
-
-  shellmock_expect kubectl --status 0 --match "$__args" --output "xpto2"
-
-  shellmock_expect kubectl --status 0 --match "config use-context $__current_context"
-
-  __last_command="${1} "$context
-
-  run ${__last_command}
-
-  local file=$(echo $__resource.$__output | sed -e "s/\(.*\)\/\(.*\)/\1_\2/" 2>&1)
-
-  [ "$status" -eq 0 ]
-  [ "$output" = "'$file' file saved successfully" ]
-
-  local content=$(cat "$file")
-  [ "$content" = "xpto2" ]
-
-  shellmock_verify
-
-  [ "${capture[1]}" = "kubectl-stub config current-context" ]
-  [ "${capture[2]}" = "kubectl-stub config use-context $context" ]
-  [ "${capture[3]}" = "kubectl-stub $__args" ]
-  [ "${capture[4]}" = "kubectl-stub config use-context $__current_context" ]
-}
-
-@test "kubeio with short options and -a success" {
-  __kubeio_success_all_short_or_full_more_a_or_apply_options "$__command_short -a"
-}
-
-@test "kubeio with full options and --apply success" {
-  __kubeio_success_all_short_or_full_more_a_or_apply_options "$__command_full --apply"
-}
-
-function __kubeio_success_all_short_or_full_more_a_or_apply_options() {
-  shellmock_expect kubectl --status 0 --match "config current-context" --output "$__current_context"
-
-  shellmock_expect kubectl --status 0 --match "config use-context $__from"
-
-  shellmock_expect kubectl --status 0 --match "$__args" --output "Success"
-
-  shellmock_expect kubectl --status 0 --match "config use-context $__current_context"
-
-  shellmock_expect kubectl --status 0 --match "apply -f -"
-
-  __last_command="${1}"
-
-  run ${__last_command}
-
-  [ "$status" -eq 0 ]
-  [ "$output" = "'$__resource' applied with successfully" ]
-
-  shellmock_verify
-
-  [ "${capture[1]}" = "kubectl-stub config current-context" ]
-  [ "${capture[2]}" = "kubectl-stub config use-context $__from" ]
-  [ "${capture[3]}" = "kubectl-stub $__args" ]
-  [ "${capture[4]}" = "kubectl-stub config use-context $__current_context" ]
-}
-
-@test "kubeio with short options and -a unsuccess" {
-  __kubeio_success_all_short_or_full_more_a_or_apply_apply_fail "$__command_short -a"
-}
-
-@test "kubeio with full options and --apply unsuccess" {
-  __kubeio_success_all_short_or_full_more_a_or_apply_apply_fail "$__command_full --apply"
-}
-
-function __kubeio_success_all_short_or_full_more_a_or_apply_apply_fail () {
+function __kubeio_unsuccess_with_short_or_full_params_apply_fail () {
   shellmock_expect kubectl --status 0 --match "config current-context" --output "$__current_context"
 
   shellmock_expect kubectl --status 0 --match "config use-context $__from"
@@ -475,3 +319,162 @@ function __kubeio_success_all_short_or_full_more_a_or_apply_apply_fail () {
   [ "${capture[3]}" = "kubectl-stub $__args" ]
   [ "${capture[4]}" = "kubectl-stub config use-context $__current_context" ]
 }
+
+
+@test "kubeio with -f unsuccess touch fail" {
+  local context="xpto1"
+
+  __kubeio_unsuccess_with_f_or_from_params_apply_fail "$__command -f %s" $context
+}
+
+@test "kubeio with --from unsuccess touch fail" {
+  local context="xpto1"
+
+  __kubeio_unsuccess_with_f_or_from_params_apply_fail "$__command --from %s" $context
+}
+
+function __kubeio_unsuccess_with_f_or_from_params_apply_fail () {
+  local context="${2}"
+  __last_command=$(printf "${1}" "$context")
+
+  shellmock_expect kubectl --status 0 --match "config current-context" --output "$__current_context"
+
+  shellmock_expect kubectl --status 0 --match "config use-context $context"
+
+  shellmock_expect kubectl --status 0 --match "$__args" --output "xpto2"
+
+  shellmock_expect kubectl --status 0 --match "config use-context $__current_context"
+
+  shellmock_expect kubectl --status 1 --match "apply -f -" --output "fail"
+
+  run ${__last_command}
+
+  [ "$status" -eq 1 ]
+  [ "$output" = "fail" ]
+
+  shellmock_verify
+
+  [ "${capture[1]}" = "kubectl-stub config current-context" ]
+  [ "${capture[2]}" = "kubectl-stub config use-context $context" ]
+  [ "${capture[3]}" = "kubectl-stub $__args" ]
+  [ "${capture[4]}" = "kubectl-stub config use-context $__current_context" ]
+}
+
+@test "kubeio with -f and -r success" {
+  local context="xpto1"
+  local resource="deployments/xpto-1"
+
+  __kubeio_success_with_param_f_or_from_and_r_or_resource "$__command -f %s -r %s" $context $resource
+}
+
+@test "kubeio with --from and --resource success" {
+  local context="xpto1"
+  local resource="deployments/xpto-1"
+
+  __kubeio_success_with_param_f_or_from_and_r_or_resource "$__command --from %s --resource %s" $context $resource
+}
+
+function __kubeio_success_with_param_f_or_from_and_r_or_resource () {
+  local context="${2}"
+  local resource="${3}"
+  local args=$(printf "$__mask_args" "$resource" "$__output" "$__namespace")
+  __last_command=$(printf "${1}" "$context" "$resource")
+
+  shellmock_expect kubectl --status 0 --match "config current-context" --output "$__current_context"
+
+  shellmock_expect kubectl --status 0 --match "config use-context $context"
+
+  shellmock_expect kubectl --status 0 --match "$args" --output "xpto2"
+
+  shellmock_expect kubectl --status 0 --match "config use-context $__current_context"
+
+  shellmock_expect kubectl --status 0 --match "apply -f -"
+
+  run ${__last_command}
+
+  [ "$status" -eq 0 ]
+  [ "$output" = "'$resource' applied with successfully" ]
+
+  shellmock_verify
+
+  [ "${capture[1]}" = "kubectl-stub config current-context" ]
+  [ "${capture[2]}" = "kubectl-stub config use-context $context" ]
+  [ "${capture[3]}" = "kubectl-stub $args" ]
+  [ "${capture[4]}" = "kubectl-stub config use-context $__current_context" ]
+}
+
+@test "kubeio with short options and -d success" {
+  __kubeio_success_all_short_or_full_more_d_or_download_options "$__command_short -d"
+}
+
+@test "kubeio with full options and --download success" {
+  __kubeio_success_all_short_or_full_more_d_or_download_options "$__command_full --download"
+}
+
+function __kubeio_success_all_short_or_full_more_d_or_download_options() {
+  local file
+  file=$(echo $__resource.$__output | sed -e "s/\(.*\)\/\(.*\)/\1_\2/" 2>&1)
+
+  shellmock_expect kubectl --status 0 --match "config current-context" --output "$__current_context"
+
+  shellmock_expect kubectl --status 0 --match "config use-context $__from"
+
+  shellmock_expect kubectl --status 0 --match "$__args" --output "Success"
+
+  shellmock_expect kubectl --status 0 --match "config use-context $__current_context"
+
+  shellmock_expect kubectl --status 0 --match "apply -f -"
+
+  __last_command="${1}"
+
+  run ${__last_command}
+
+  [ "$status" -eq 0 ]
+  [ "$output" = "'$file' file saved successfully" ]
+
+  shellmock_verify
+
+  [ "${capture[1]}" = "kubectl-stub config current-context" ]
+  [ "${capture[2]}" = "kubectl-stub config use-context $__from" ]
+  [ "${capture[3]}" = "kubectl-stub $__args" ]
+  [ "${capture[4]}" = "kubectl-stub config use-context $__current_context" ]
+}
+
+@test "kubeio with short options and -d unsuccess" {
+  __kubeio_success_all_short_or_full_more_a_or_apply_apply_fail "$__command_short -d"
+}
+
+@test "kubeio with full options and --download unsuccess" {
+  __kubeio_success_all_short_or_full_more_a_or_apply_apply_fail "$__command_full --download"
+}
+
+function __kubeio_success_all_short_or_full_more_a_or_apply_apply_fail () {
+  shellmock_expect kubectl --status 0 --match "config current-context" --output "$__current_context"
+
+  shellmock_expect kubectl --status 0 --match "config use-context $__from"
+
+  shellmock_expect kubectl --status 0 --match "$__args" --output "Success"
+
+  shellmock_expect kubectl --status 0 --match "config use-context $__current_context"
+
+  shellmock_expect touch --status 1 --match "$__resource.$__output" --output "fail"
+
+  __last_command="${1}"
+
+  run ${__last_command}
+
+  [ "$status" -eq 1 ]
+  [ "$output" = "fail" ]
+
+  shellmock_verify
+
+  [ "${capture[1]}" = "kubectl-stub config current-context" ]
+  [ "${capture[2]}" = "kubectl-stub config use-context $__from" ]
+  [ "${capture[3]}" = "kubectl-stub $__args" ]
+  [ "${capture[4]}" = "kubectl-stub config use-context $__current_context" ]
+}
+
+
+#  local file=$(echo $__resource.$__output | sed -e "s/\(.*\)\/\(.*\)/\1_\2/" 2>&1)
+# local content=$(cat "$file")
+# [ "$content" = "Success" ]

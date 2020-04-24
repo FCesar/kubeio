@@ -71,7 +71,7 @@ function help () {
   -n --namespace    [arg] Namespace to usage. Default=default
   -r --resource     [arg] Name of resource to wish obtain infos. Default=all
   -o --output       [arg] Output format. Default=json
-  -a --apply        Obtain a resource from '-f or --from' and apply it to the current cluster.
+  -d --download     Obtain a resource from '-f or --from' and save in folder.
   -h --help         Show message help
 EOF
 
@@ -273,7 +273,7 @@ __resource=${arg_r:-}
 
 __output=${arg_o:-}
 
-__applay=${arg_a:-}
+__download=${arg_d:-}
 
 ## Swap Context
 __current_context=$(kubectl config current-context 2>&1) || \
@@ -294,7 +294,7 @@ if [ $__content_status -gt 0 ] ; then
   error $__content_status "$__content"
 fi
 
-if [ "${__applay}" -eq 0  ] ; then
+if [ "${__download}" -eq 1  ] ; then
   __file="$__resource.$__output"
 
   __file=$(echo "$__file" | sed -e "s/\(.*\)\/\(.*\)/\1_\2/" 2>&1) || \
